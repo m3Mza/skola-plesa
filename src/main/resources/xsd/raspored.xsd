@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://danceschool.example.com/raspored"
+           targetNamespace="http://danceschool.example.com/raspored"
+           elementFormDefault="qualified">
+
+    <!-- Common Types -->
+    <xs:simpleType name="ClassType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="balet"/>
+            <xs:enumeration value="hiphop"/>
+            <xs:enumeration value="latino"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="RasporedType">
+        <xs:sequence>
+            <xs:element name="id" type="xs:long"/>
+            <xs:element name="tipCasa" type="xs:string"/>
+            <xs:element name="datumVreme" type="xs:dateTime"/>
+            <xs:element name="trajanjeMin" type="xs:int"/>
+            <xs:element name="lokacija" type="xs:string" minOccurs="0"/>
+            <xs:element name="opis" type="xs:string" minOccurs="0"/>
+            <xs:element name="instruktorId" type="xs:long"/>
+            <xs:element name="instruktorIme" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Get All Schedules Request/Response -->
+    <xs:element name="GetAllSchedulesRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="userId" type="xs:long"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetAllSchedulesResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="schedule" type="tns:RasporedType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Get Schedules By Class Type Request/Response -->
+    <xs:element name="GetSchedulesByClassTypeRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="userId" type="xs:long"/>
+                <xs:element name="classType" type="tns:ClassType"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetSchedulesByClassTypeResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="schedule" type="tns:RasporedType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Add Schedule Request/Response -->
+    <xs:element name="AddScheduleRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="userId" type="xs:long"/>
+                <xs:element name="tipCasa" type="tns:ClassType"/>
+                <xs:element name="datumVreme" type="xs:dateTime"/>
+                <xs:element name="trajanjeMin" type="xs:int"/>
+                <xs:element name="lokacija" type="xs:string" minOccurs="0"/>
+                <xs:element name="opis" type="xs:string" minOccurs="0"/>
+                <xs:element name="instruktorId" type="xs:long" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="AddScheduleResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="success" type="xs:boolean"/>
+                <xs:element name="message" type="xs:string"/>
+                <xs:element name="schedule" type="tns:RasporedType" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Delete Schedule Request/Response -->
+    <xs:element name="DeleteScheduleRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="userId" type="xs:long"/>
+                <xs:element name="scheduleId" type="xs:long"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="DeleteScheduleResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="success" type="xs:boolean"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
