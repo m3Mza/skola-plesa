@@ -1,9 +1,9 @@
 package com.example.danceschool.model;
 
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "latino")
+/**
+ * Latino enrollment - Pure POJO without database annotations.
+ * Inherits common enrollment properties from base class.
+ */
 public class LatinoEnrollment extends Enrollment {
-    // Nasledjuje sve od Enrollment klase
+    // Inherits all fields from Enrollment
 }

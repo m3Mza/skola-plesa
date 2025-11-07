@@ -1,12 +1,12 @@
 package com.example.danceschool.service;
 
+import com.example.danceschool.dao.RasporedDAO;
 import com.example.danceschool.model.Raspored;
 import com.example.danceschool.model.User;
-import com.example.danceschool.repository.RasporedRepository;
-import com.example.danceschool.repository.RasporedProcedureRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,13 +15,10 @@ import java.util.stream.Collectors;
 public class RasporedService {
 
     @Autowired
-    private RasporedRepository rasporedRepository;
+    private RasporedDAO rasporedDAO;
 
     @Autowired
     private EnrollmentService enrollmentService;
-
-    @Autowired
-    private RasporedProcedureRepository rasporedProcedureRepository;
 
     /**
      * Get schedule for a specific user based on their role
@@ -34,18 +31,36 @@ public class RasporedService {
             return List.of();
         }
 
-        List<Raspored> allSchedules = rasporedRepository.findAll();
+        List<Raspored> allSchedules;
+        try {
+            allSchedules = rasporedDAO.findAll();
+            System.out.println("DEBUG: Fetched " + allSchedules.size() + " schedules from database");
+            for (Raspored r : allSchedules) {
+                System.out.println("  - Schedule: id=" + r.getId() + ", tipCasa=" + r.getTipCasa() + 
+                                   ", datum=" + r.getDatumVreme() + ", lokacija=" + r.getLokacija());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Database error fetching schedules", e);
+        }
 
         // Instructors see everything
         if (user.isInstruktor()) {
+            System.out.println("DEBUG: User is instructor, returning all " + allSchedules.size() + " schedules");
             return allSchedules;
         }
 
         // Learners see only their enrolled classes
         if (user.isUcenik()) {
-            return allSchedules.stream()
-                    .filter(raspored -> enrollmentService.isEnrolled(user, raspored.getTipCasa()))
+            List<Raspored> filtered = allSchedules.stream()
+                    .filter(raspored -> {
+                        boolean enrolled = enrollmentService.isEnrolled(user, raspored.getTipCasa());
+                        System.out.println("DEBUG: Checking " + raspored.getTipCasa() + " enrollment: " + enrolled);
+                        return enrolled;
+                    })
                     .collect(Collectors.toList());
+            System.out.println("DEBUG: User is learner, returning " + filtered.size() + " enrolled schedules");
+            return filtered;
         }
 
         return List.of();
@@ -85,24 +100,40 @@ public class RasporedService {
         }
 
         // Call stored procedure
-        RasporedProcedureRepository.RasporedResult result = 
-            rasporedProcedureRepository.createSchedule(
+        String result;
+        try {
+            result = rasporedDAO.dodajURaspored(
                 tipCasa.toLowerCase(),
-                Math.toIntExact(instruktorId != null ? instruktorId : user.getId()),
+                instruktorId != null ? instruktorId : user.getId(),
                 datumVreme,
                 trajanjeMin,
-                lokacija, // lokacija
+                lokacija,
+                15, // maksimalnoPolaznika - default value
                 opis != null ? opis.trim() : "",
-                Math.toIntExact(user.getId())
+                user.getId()
             );
-        
-        if (!result.isSuccess()) {
-            throw new IllegalArgumentException(result.getMessage());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Database error adding schedule: " + e.getMessage(), e);
         }
         
-        // Fetch and return the created schedule
-        if (result.getNewId() != null) {
-            return rasporedRepository.findById(result.getNewId().longValue()).orElse(null);
+        if (result == null || !result.startsWith("USPEH")) {
+            throw new IllegalArgumentException("Failed to add schedule: " + (result != null ? result : "Unknown error"));
+        }
+        
+        // Extract ID from success message (format: "USPEH: Dodat termin sa ID 123")
+        try {
+            String[] parts = result.split(" ID ");
+            if (parts.length > 1) {
+                Long newId = Long.parseLong(parts[1].trim());
+                return rasporedDAO.findById(newId).orElse(null);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error retrieving created schedule: " + e.getMessage(), e);
+        } catch (Exception e) {
+            // If we can't parse the ID, log it but don't fail
+            e.printStackTrace();
         }
         
         return null;
@@ -124,14 +155,15 @@ public class RasporedService {
         }
 
         // Call stored procedure
-        RasporedProcedureRepository.RasporedResult result = 
-            rasporedProcedureRepository.deleteSchedule(
-                Math.toIntExact(scheduleId),
-                Math.toIntExact(user.getId())
-            );
+        String result;
+        try {
+            result = rasporedDAO.obrisiRaspored(scheduleId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error deleting schedule", e);
+        }
         
-        if (!result.isSuccess()) {
-            throw new IllegalArgumentException(result.getMessage());
+        if (!result.startsWith("USPEH")) {
+            throw new IllegalArgumentException(result);
         }
     }
 
@@ -139,6 +171,10 @@ public class RasporedService {
      * Get all schedule entries (admin/instructor view)
      */
     public List<Raspored> getAllSchedules() {
-        return rasporedRepository.findAll();
+        try {
+            return rasporedDAO.findAll();
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error fetching schedules", e);
+        }
     }
 }

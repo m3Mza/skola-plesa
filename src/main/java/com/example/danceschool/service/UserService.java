@@ -1,17 +1,18 @@
 package com.example.danceschool.service;
 
+import com.example.danceschool.dao.UserDAO;
 import com.example.danceschool.model.User;
-import com.example.danceschool.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 @Service
 public class UserService {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserDAO userDAO;
 
     /**
      * Authenticate user with email and password
@@ -28,7 +29,13 @@ public class UserService {
             throw new IllegalArgumentException("Password is required");
         }
 
-        User user = userRepository.findByEmail(email).orElse(null);
+        User user;
+        try {
+            user = userDAO.findByEmail(email).orElse(null);
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error during authentication", e);
+        }
+        
         if (user == null) {
             throw new IllegalArgumentException("Invalid email or password");
         }
@@ -74,8 +81,12 @@ public class UserService {
         }
 
         // Check if email already exists
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new IllegalArgumentException("Email already registered");
+        try {
+            if (userDAO.findByEmail(email).isPresent()) {
+                throw new IllegalArgumentException("Email already registered");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error during registration", e);
         }
 
         // Create new user
@@ -89,7 +100,11 @@ public class UserService {
         user.setDatumRegistracije(LocalDateTime.now());
         user.setAktivan(true);
 
-        return userRepository.save(user);
+        try {
+            return userDAO.save(user);
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error during registration", e);
+        }
     }
 
     /**
@@ -99,7 +114,11 @@ public class UserService {
         if (email == null || email.trim().isEmpty()) {
             return null;
         }
-        return userRepository.findByEmail(email.trim().toLowerCase()).orElse(null);
+        try {
+            return userDAO.findByEmail(email.trim().toLowerCase()).orElse(null);
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error", e);
+        }
     }
 
     /**

@@ -47,7 +47,8 @@
     <div class="container text-center">
         <h1 class="display-4">Dobrodošli u Škola plesa</h1>
         <p class="lead">Časovi plesa za sve uzraste — pronađite ritam, steknite prijatelje i zabavite se.</p>
-    <a class="btn btn-primary btn-lg" th:href="@{/classes}" href="/classes">Pogledajte časove</a>
+        <a th:if="${viewModel.instructor}" class="btn btn-primary btn-lg" th:href="@{/raspored}" href="/raspored">Kreirajte termine</a>
+        <a th:unless="${viewModel.instructor}" class="btn btn-primary btn-lg" th:href="@{/classes}" href="/classes">Pogledajte časove</a>
     </div>
 </header>
 

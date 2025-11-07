@@ -1,64 +1,63 @@
 package com.example.danceschool.repository;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.ParameterMode;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.StoredProcedureQuery;
+import com.example.danceschool.dao.BaletEnrollmentDAO;
+import com.example.danceschool.dao.HiphopEnrollmentDAO;
+import com.example.danceschool.dao.LatinoEnrollmentDAO;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
+
+/**
+ * Repository for enrollment stored procedures using DAO pattern.
+ */
 @Repository
 public class EnrollmentProcedureRepository {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final BaletEnrollmentDAO baletDAO;
+    private final HiphopEnrollmentDAO hiphopDAO;
+    private final LatinoEnrollmentDAO latinoDAO;
+
+    public EnrollmentProcedureRepository(BaletEnrollmentDAO baletDAO, 
+                                        HiphopEnrollmentDAO hiphopDAO,
+                                        LatinoEnrollmentDAO latinoDAO) {
+        this.baletDAO = baletDAO;
+        this.hiphopDAO = hiphopDAO;
+        this.latinoDAO = latinoDAO;
+    }
 
     /**
      * Call stored procedure to enroll user in a class
      */
-    @Transactional
     public EnrollmentResult enrollInClass(Integer korisnikId, String tipCasa, Integer instruktorId) {
-        StoredProcedureQuery query = entityManager.createStoredProcedureQuery("sp_prijavi_na_cas");
-        
-        query.registerStoredProcedureParameter("p_korisnik_id", Integer.class, ParameterMode.IN);
-        query.registerStoredProcedureParameter("p_tip_casa", String.class, ParameterMode.IN);
-        query.registerStoredProcedureParameter("p_instruktor_id", Integer.class, ParameterMode.IN);
-        query.registerStoredProcedureParameter("p_uspeh", Boolean.class, ParameterMode.OUT);
-        query.registerStoredProcedureParameter("p_poruka", String.class, ParameterMode.OUT);
-        
-        query.setParameter("p_korisnik_id", korisnikId);
-        query.setParameter("p_tip_casa", tipCasa);
-        query.setParameter("p_instruktor_id", instruktorId);
-        
-        query.execute();
-        
-        Boolean uspeh = (Boolean) query.getOutputParameterValue("p_uspeh");
-        String poruka = (String) query.getOutputParameterValue("p_poruka");
-        
-        return new EnrollmentResult(uspeh, poruka);
+        try {
+            String result;
+            switch (tipCasa.toLowerCase()) {
+                case "balet":
+                    result = baletDAO.prijaviNaBalet(korisnikId.longValue(), instruktorId.longValue(), null);
+                    break;
+                case "hiphop":
+                    result = hiphopDAO.prijaviNaHiphop(korisnikId.longValue(), instruktorId.longValue(), null);
+                    break;
+                case "latino":
+                    result = latinoDAO.prijaviNaLatino(korisnikId.longValue(), instruktorId.longValue(), null);
+                    break;
+                default:
+                    return new EnrollmentResult(false, "Nepoznat tip časa: " + tipCasa);
+            }
+            
+            boolean uspeh = result != null && result.contains("uspešno");
+            return new EnrollmentResult(uspeh, result);
+        } catch (SQLException e) {
+            return new EnrollmentResult(false, "Greška: " + e.getMessage());
+        }
     }
 
     /**
      * Call stored procedure to unenroll user from a class
+     * Note: Not implemented in DAO layer yet
      */
-    @Transactional
     public EnrollmentResult unenrollFromClass(Integer korisnikId, String tipCasa) {
-        StoredProcedureQuery query = entityManager.createStoredProcedureQuery("sp_odjavi_sa_casa");
-        
-        query.registerStoredProcedureParameter("p_korisnik_id", Integer.class, ParameterMode.IN);
-        query.registerStoredProcedureParameter("p_tip_casa", String.class, ParameterMode.IN);
-        query.registerStoredProcedureParameter("p_uspeh", Boolean.class, ParameterMode.OUT);
-        query.registerStoredProcedureParameter("p_poruka", String.class, ParameterMode.OUT);
-        
-        query.setParameter("p_korisnik_id", korisnikId);
-        query.setParameter("p_tip_casa", tipCasa);
-        
-        query.execute();
-        
-        Boolean uspeh = (Boolean) query.getOutputParameterValue("p_uspeh");
-        String poruka = (String) query.getOutputParameterValue("p_poruka");
-        
-        return new EnrollmentResult(uspeh, poruka);
+        return new EnrollmentResult(false, "Odjava nije još implementirana");
     }
 
     /**

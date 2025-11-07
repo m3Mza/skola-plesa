@@ -1,27 +1,26 @@
 package com.example.danceschool.service;
 
+import com.example.danceschool.dao.*;
 import com.example.danceschool.model.*;
-import com.example.danceschool.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.sql.SQLException;
 
 @Service
 public class EnrollmentService {
 
     @Autowired
-    private BaletEnrollmentRepository baletRepository;
+    private BaletEnrollmentDAO baletDAO;
 
     @Autowired
-    private HiphopEnrollmentRepository hiphopRepository;
+    private HiphopEnrollmentDAO hiphopDAO;
 
     @Autowired
-    private LatinoEnrollmentRepository latinoRepository;
-
-    @Autowired
-    private EnrollmentProcedureRepository enrollmentProcedureRepository;
+    private LatinoEnrollmentDAO latinoDAO;
 
     // Default instructor ID
-    private static final Integer DEFAULT_INSTRUCTOR_ID = 2;
+    private static final Long DEFAULT_INSTRUCTOR_ID = 2L;
 
     /**
      * Enroll a user in a specific class type using stored procedure
@@ -38,16 +37,35 @@ public class EnrollmentService {
             throw new IllegalArgumentException("Only learners can enroll in classes");
         }
 
+        System.out.println("DEBUG: Enrolling user " + user.getId() + " in " + classType);
+
         // Call stored procedure
-        EnrollmentProcedureRepository.EnrollmentResult result = 
-            enrollmentProcedureRepository.enrollInClass(
-                Math.toIntExact(user.getId()), 
-                classType.toLowerCase(), 
-                DEFAULT_INSTRUCTOR_ID
-            );
+        String result;
+        try {
+            switch (classType.toLowerCase()) {
+                case "balet":
+                    System.out.println("DEBUG: Calling prijaviNaBalet");
+                    result = baletDAO.prijaviNaBalet(user.getId(), DEFAULT_INSTRUCTOR_ID, null);
+                    break;
+                case "hiphop":
+                    System.out.println("DEBUG: Calling prijaviNaHiphop");
+                    result = hiphopDAO.prijaviNaHiphop(user.getId(), DEFAULT_INSTRUCTOR_ID, null);
+                    break;
+                case "latino":
+                    System.out.println("DEBUG: Calling prijaviNaLatino");
+                    result = latinoDAO.prijaviNaLatino(user.getId(), DEFAULT_INSTRUCTOR_ID, null);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid class type");
+            }
+            System.out.println("DEBUG: Enrollment result: " + result);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Database error during enrollment: " + e.getMessage(), e);
+        }
         
-        if (!result.isSuccess()) {
-            throw new IllegalArgumentException(result.getMessage());
+        if (result == null || !result.startsWith("USPEH")) {
+            throw new IllegalArgumentException("Failed to enroll: " + (result != null ? result : "Unknown error"));
         }
     }
 
@@ -66,15 +84,35 @@ public class EnrollmentService {
             throw new IllegalArgumentException("Only learners can unenroll from classes");
         }
 
+        System.out.println("DEBUG: Unenrolling user " + user.getId() + " from " + classType);
+
         // Call stored procedure
-        EnrollmentProcedureRepository.EnrollmentResult result = 
-            enrollmentProcedureRepository.unenrollFromClass(
-                Math.toIntExact(user.getId()), 
-                classType.toLowerCase()
-            );
+        String result;
+        try {
+            switch (classType.toLowerCase()) {
+                case "balet":
+                    System.out.println("DEBUG: Calling odjaviSaBalet");
+                    result = baletDAO.odjaviSaBalet(user.getId());
+                    break;
+                case "hiphop":
+                    System.out.println("DEBUG: Calling odjaviSaHiphop");
+                    result = hiphopDAO.odjaviSaHiphop(user.getId());
+                    break;
+                case "latino":
+                    System.out.println("DEBUG: Calling odjaviSaLatino");
+                    result = latinoDAO.odjaviSaLatino(user.getId());
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid class type");
+            }
+            System.out.println("DEBUG: Unenrollment result: " + result);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Database error during unenrollment: " + e.getMessage(), e);
+        }
         
-        if (!result.isSuccess()) {
-            throw new IllegalArgumentException(result.getMessage());
+        if (result == null || !result.startsWith("USPEH")) {
+            throw new IllegalArgumentException("Failed to unenroll: " + (result != null ? result : "Unknown error"));
         }
     }
 
@@ -82,19 +120,23 @@ public class EnrollmentService {
      * Check if user is enrolled in a specific class type
      */
     public boolean isEnrolled(User user, String classType) {
-        if (user == null || !user.isUcenik()) {
+        if (user == null || !user.isUcenik() || classType == null) {
             return false;
         }
 
-        switch (classType.toLowerCase()) {
-            case "balet":
-                return baletRepository.existsByKorisnikId(user.getId());
-            case "hiphop":
-                return hiphopRepository.existsByKorisnikId(user.getId());
-            case "latino":
-                return latinoRepository.existsByKorisnikId(user.getId());
-            default:
-                return false;
+        try {
+            switch (classType.toLowerCase()) {
+                case "balet":
+                    return !baletDAO.findByKorisnikId(user.getId()).isEmpty();
+                case "hiphop":
+                    return !hiphopDAO.findByKorisnikId(user.getId()).isEmpty();
+                case "latino":
+                    return !latinoDAO.findByKorisnikId(user.getId()).isEmpty();
+                default:
+                    return false;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error checking enrollment", e);
         }
     }
 
@@ -104,9 +146,28 @@ public class EnrollmentService {
     public EnrollmentStatus getEnrollmentStatus(User user) {
         EnrollmentStatus status = new EnrollmentStatus();
         if (user != null && user.isUcenik()) {
-            status.setEnrolledBalet(baletRepository.existsByKorisnikId(user.getId()));
-            status.setEnrolledHiphop(hiphopRepository.existsByKorisnikId(user.getId()));
-            status.setEnrolledLatino(latinoRepository.existsByKorisnikId(user.getId()));
+            try {
+                System.out.println("DEBUG: Getting enrollment status for user " + user.getId());
+                
+                java.util.List<?> baletList = baletDAO.findByKorisnikId(user.getId());
+                System.out.println("DEBUG: Balet enrollments: " + baletList.size());
+                status.setEnrolledBalet(!baletList.isEmpty());
+                
+                java.util.List<?> hiphopList = hiphopDAO.findByKorisnikId(user.getId());
+                System.out.println("DEBUG: Hiphop enrollments: " + hiphopList.size());
+                status.setEnrolledHiphop(!hiphopList.isEmpty());
+                
+                java.util.List<?> latinoList = latinoDAO.findByKorisnikId(user.getId());
+                System.out.println("DEBUG: Latino enrollments: " + latinoList.size());
+                status.setEnrolledLatino(!latinoList.isEmpty());
+                
+                System.out.println("DEBUG: Enrollment status - Balet: " + status.isEnrolledBalet() + 
+                                   ", Hiphop: " + status.isEnrolledHiphop() + 
+                                   ", Latino: " + status.isEnrolledLatino());
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Database error getting enrollment status", e);
+            }
         }
         return status;
     }

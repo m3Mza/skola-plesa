@@ -1,17 +1,16 @@
 package com.example.danceschool.model;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "korisnici")
+/**
+ * User model - Pure POJO without database annotations.
+ * Validation annotations are kept as they're part of business logic, not database technology.
+ */
 public class User {
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
     @NotBlank(message = "Ime je obavezno")
@@ -25,7 +24,6 @@ public class User {
     @NotBlank(message = "Email je obavezan")
     @Email(message = "Unesite validnu email adresu")
     @Size(max = 255)
-    @Column(unique = true)
     private String email;
     
     @NotBlank(message = "Lozinka je obavezna")
@@ -35,12 +33,8 @@ public class User {
     @Size(max = 20)
     private String telefon;
     
-    @Column(name = "datum_registracije")
     private LocalDateTime datumRegistracije;
-    
-    @Column(length = 20)
     private String uloga = "ucenik"; // 'ucenik' ili 'instruktor'
-    
     private Boolean aktivan = true;
     
     // Konstruktori

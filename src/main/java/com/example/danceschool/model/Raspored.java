@@ -1,40 +1,22 @@
 package com.example.danceschool.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "raspored")
+/**
+ * Raspored (Schedule) model - Pure POJO without database annotations.
+ * Represents a dance class schedule entry.
+ */
 public class Raspored {
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(name = "tip_casa", length = 20)
     private String tipCasa; // 'balet', 'hiphop', 'latino'
-    
-    @Column(name = "instruktor_id")
     private Long instruktorId;
-    
-    @Column(name = "datum_vreme")
     private LocalDateTime datumVreme;
-    
-    @Column(name = "trajanje_min")
     private Integer trajanjeMin = 60;
-    
     private String lokacija;
-    
-    @Column(name = "maksimalno_polaznika")
     private Integer maksimalnoPolaznika = 15;
-    
-    @Column(columnDefinition = "TEXT")
     private String opis;
-    
-    @Column(name = "kreirao_id")
     private Long keiraoId;
-    
-    @Column(name = "datum_kreiranja")
     private LocalDateTime datumKreiranja;
     
     public Raspored() {

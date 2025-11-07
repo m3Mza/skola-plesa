@@ -1,25 +1,17 @@
 package com.example.danceschool.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@MappedSuperclass
+/**
+ * Base class for all enrollment types.
+ * Pure POJO with no database annotations - separates semantics from technology.
+ */
 public abstract class Enrollment {
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(name = "korisnik_id")
     private Long korisnikId;
-    
-    @Column(name = "instruktor_id")
     private Long instruktorId;
-    
-    @Column(name = "datum_prijave")
     private LocalDateTime datumPrijave;
-    
-    @Column(columnDefinition = "TEXT")
     private String napomena;
     
     public Enrollment() {
