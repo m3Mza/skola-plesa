@@ -104,30 +104,30 @@
             <form th:action="@{/raspored/add}" method="post">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="tipCasa" class="form-label">Tip časa</label>
-                        <select class="form-control" id="tipCasa" name="tipCasa" required>
+                        <label for="tip_casa" class="form-label">Tip časa</label>
+                        <select class="form-control" id="tip_casa" name="tip_casa" required>
                             <option value="balet">Balet</option>
                             <option value="hiphop">Hip-hop / Moderni</option>
                             <option value="latino">Latino plesovi</option>
                         </select>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="datumVreme" class="form-label">Datum i vreme</label>
-                        <input type="datetime-local" class="form-control" id="datumVreme" name="datumVreme" required>
+                        <label for="datum_vreme" class="form-label">Datum i vreme</label>
+                        <input type="datetime-local" class="form-control" id="datum_vreme" name="datum_vreme" required>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label for="trajanjeMin" class="form-label">Trajanje (min)</label>
-                        <input type="number" class="form-control" id="trajanjeMin" name="trajanjeMin" value="60">
+                        <label for="trajanje_min" class="form-label">Trajanje (min)</label>
+                        <input type="number" class="form-control" id="trajanje_min" name="trajanje_min" value="60">
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="lokacija" class="form-label">Lokacija</label>
                         <input type="text" class="form-control" id="lokacija" name="lokacija" value="Sala 1">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label for="maksimalnoPolaznika" class="form-label">Max polaznika</label>
-                        <input type="number" class="form-control" id="maksimalnoPolaznika" name="maksimalnoPolaznika" value="15">
+                        <label for="maksimalno_polaznika" class="form-label">Max polaznika</label>
+                        <input type="number" class="form-control" id="maksimalno_polaznika" name="maksimalno_polaznika" value="15">
                     </div>
                 </div>
                 <div class="mb-3">
@@ -148,25 +148,93 @@
                 <p th:text="${viewModel.instructor} ? 'Nema zakazanih časova.' : 'Nemate zakazanih časova. Prijavite se na časove na stranici Časovi.'">Nema časova</p>
             </div>
             
-            <div th:each="cas : ${viewModel.scheduleItems}" th:class="'calendar-event event-' + ${cas.tipCasa}">
+            <div th:each="cas : ${viewModel.scheduleItems}" th:class="'calendar-event event-' + ${cas.tip_casa}">
                 <div class="row align-items-center">
                     <div class="col-md-2">
-                        <div class="event-time" th:text="${#temporals.format(cas.datumVreme, 'HH:mm')}">10:00</div>
-                        <div class="event-date" th:text="${#temporals.format(cas.datumVreme, 'dd.MM.yyyy')}">10.11.2025</div>
+                        <div class="event-time" th:text="${#temporals.format(cas.datum_vreme, 'HH:mm')}">10:00</div>
+                        <div class="event-date" th:text="${#temporals.format(cas.datum_vreme, 'dd.MM.yyyy')}">10.11.2025</div>
                     </div>
                     <div class="col-md-8">
-                        <span th:class="'event-type type-' + ${cas.tipCasa}" th:text="${cas.tipCasa}">balet</span>
+                        <span th:class="'event-type type-' + ${cas.tip_casa}" th:text="${cas.tip_casa}">balet</span>
                         <p class="mb-1"><strong th:text="${cas.opis}">Opis časa</strong></p>
                         <p class="mb-0 text-muted">
                             <span th:text="'📍 ' + ${cas.lokacija}">Lokacija</span> · 
-                            <span th:text="${cas.trajanjeMin} + ' min'">60 min</span> · 
-                            <span th:text="'Max: ' + ${cas.maksimalnoPolaznika}">Max: 15</span>
+                            <span th:text="${cas.trajanje_min} + ' min'">60 min</span> · 
+                            <span th:text="'Max: ' + ${cas.maksimalno_polaznika}">Max: 15</span>
                         </p>
                     </div>
                     <div class="col-md-2 text-end" th:if="${viewModel.instructor}">
-                        <form th:action="@{/raspored/delete/{id}(id=${cas.id})}" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Da li ste sigurni?')">Obriši</button>
-                        </form>
+                        <div class="d-flex flex-column gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                    data-bs-toggle="modal" 
+                                    th:data-bs-target="${'#editModal' + cas.id}">
+                                Izmeni
+                            </button>
+                            <form th:action="@{/raspored/delete/{id}(id=${cas.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Da li ste sigurni?')">Obriši</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modali za izmenu časova (van petlje da bi bili stabilni) -->
+            <div th:each="cas : ${viewModel.scheduleItems}">
+                <div th:if="${viewModel.instructor}" class="modal fade" th:id="${'editModal' + cas.id}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Izmeni čas</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form th:action="@{/raspored/edit}" method="post">
+                                <div class="modal-body">
+                                    <input type="hidden" name="rasporedId" th:value="${cas.id}" />
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Tip časa</label>
+                                        <select class="form-control" name="tip_casa" required>
+                                            <option value="balet" th:selected="${cas.tip_casa == 'balet'}">Balet</option>
+                                            <option value="hiphop" th:selected="${cas.tip_casa == 'hiphop'}">Hip-hop / Moderni</option>
+                                            <option value="latino" th:selected="${cas.tip_casa == 'latino'}">Latino plesovi</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Datum i vreme</label>
+                                        <input type="datetime-local" class="form-control" name="datum_vreme" 
+                                               th:value="${#temporals.format(cas.datum_vreme, 'yyyy-MM-dd''T''HH:mm')}" required>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Trajanje (min)</label>
+                                        <input type="number" class="form-control" name="trajanje_min" 
+                                               th:value="${cas.trajanje_min}">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Lokacija</label>
+                                        <input type="text" class="form-control" name="lokacija" 
+                                               th:value="${cas.lokacija}">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Max polaznika</label>
+                                        <input type="number" class="form-control" name="maksimalno_polaznika" 
+                                               th:value="${cas.maksimalno_polaznika}">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Opis</label>
+                                        <textarea class="form-control" name="opis" rows="2" th:text="${cas.opis}"></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkaži</button>
+                                    <button type="submit" class="btn btn-primary">Sačuvaj izmene</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>

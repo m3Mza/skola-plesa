@@ -34,25 +34,30 @@
                 <div class="card-body p-5">
                     <h2 class="text-center mb-4">Prijava</h2>
                     
-                    <!-- Poruke o grešci -->
-                    <div th:if="${viewModel.hasError}" class="alert alert-danger" role="alert">
-                        <span th:text="${viewModel.errorMessage}">Neispravni podaci</span>
+                    <!-- Poruka o grešci -->
+                    <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                        <span>Neispravni podaci za prijavu</span>
+                    </div>
+                    
+                    <!-- Poruka o uspešnoj odjavi -->
+                    <div th:if="${param.logout}" class="alert alert-info" role="alert">
+                        <span>Uspešno ste se odjavili</span>
                     </div>
                     
                     <!-- Poruka o uspešnoj registraciji -->
-                    <div th:if="${success}" class="alert alert-success" role="alert">
-                        <span th:text="${success}">Uspešna registracija!</span>
+                    <div th:if="${uspeh}" class="alert alert-success" role="alert">
+                        <span th:text="${uspeh}">Uspešna registracija!</span>
                     </div>
                     
                     <form th:action="@{/login}" method="post">
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email adresa</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
+                            <label for="username" class="form-label">Email adresa</label>
+                            <input type="email" class="form-control" id="username" name="username" required>
                         </div>
                         
                         <div class="mb-4">
-                            <label for="lozinka" class="form-label">Lozinka</label>
-                            <input type="password" class="form-control" id="lozinka" name="lozinka" required>
+                            <label for="password" class="form-label">Lozinka</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
                         </div>
                         
                         <button type="submit" class="btn btn-primary w-100 mb-3">Prijavi se</button>

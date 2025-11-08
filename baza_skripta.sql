@@ -325,11 +325,11 @@ CREATE PROCEDURE sp_kreiraj_raspored(
     IN p_datum_vreme DATETIME,
     IN p_trajanje_min INT,
     IN p_lokacija VARCHAR(255),
+    IN p_maksimalno_polaznika INT,
     IN p_opis TEXT,
     IN p_kreirao_id INT,
     OUT p_uspeh BOOLEAN,
-    OUT p_poruka VARCHAR(255),
-    OUT p_novi_id INT
+    OUT p_poruka VARCHAR(255)
 )
 BEGIN
     DECLARE v_uloga VARCHAR(20);
@@ -341,7 +341,6 @@ BEGIN
     IF v_uloga != 'instruktor' THEN
         SET p_uspeh = FALSE;
         SET p_poruka = 'Samo instruktori mogu kreirati raspored';
-        SET p_novi_id = NULL;
     ELSE
         -- Proveri da li postoji vremenski konflikt
         SELECT COUNT(*) INTO v_konflikt
@@ -356,14 +355,12 @@ BEGIN
         IF v_konflikt > 0 THEN
             SET p_uspeh = FALSE;
             SET p_poruka = 'Postoji vremenski konflikt sa postojećim časom';
-            SET p_novi_id = NULL;
         ELSE
             INSERT INTO raspored (tip_casa, instruktor_id, datum_vreme, trajanje_min, lokacija, maksimalno_polaznika, opis, kreirao_id)
-            VALUES (p_tip_casa, p_instruktor_id, p_datum_vreme, p_trajanje_min, p_lokacija, 15, p_opis, p_kreirao_id);
+            VALUES (p_tip_casa, p_instruktor_id, p_datum_vreme, p_trajanje_min, p_lokacija, p_maksimalno_polaznika, p_opis, p_kreirao_id);
             
-            SET p_novi_id = LAST_INSERT_ID();
             SET p_uspeh = TRUE;
-            SET p_poruka = 'Raspored uspešno kreiran';
+            SET p_poruka = CONCAT('Raspored uspešno kreiran ID:', LAST_INSERT_ID());
         END IF;
     END IF;
 END//

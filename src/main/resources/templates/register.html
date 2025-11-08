@@ -35,34 +35,31 @@
                     <h2 class="text-center mb-4">Registracija</h2>
                     
                     <!-- Poruke o grešci -->
-                    <div th:if="${viewModel.hasError}" class="alert alert-danger" role="alert">
-                        <span th:text="${viewModel.errorMessage}">Greška</span>
+                    <div th:if="${greska}" class="alert alert-danger" role="alert">
+                        <span th:text="${greska}">Greška</span>
                     </div>
                     
                     <!-- Poruka o uspehu -->
-                    <div th:if="${viewModel.hasSuccess}" class="alert alert-success" role="alert">
-                        <span th:text="${viewModel.successMessage}">Uspeh</span>
+                    <div th:if="${uspeh}" class="alert alert-success" role="alert">
+                        <span th:text="${uspeh}">Uspeh</span>
                     </div>
                     
-                    <form th:action="@{/register}" method="post" th:object="${user}">
+                    <form th:action="@{/register}" method="post" th:object="${registracijaViewModel}">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="ime" class="form-label">Ime *</label>
                                 <input type="text" class="form-control" id="ime" th:field="*{ime}" required>
-                                <div class="text-danger small" th:if="${#fields.hasErrors('ime')}" th:errors="*{ime}"></div>
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label for="prezime" class="form-label">Prezime *</label>
                                 <input type="text" class="form-control" id="prezime" th:field="*{prezime}" required>
-                                <div class="text-danger small" th:if="${#fields.hasErrors('prezime')}" th:errors="*{prezime}"></div>
                             </div>
                         </div>
                         
                         <div class="mb-3">
                             <label for="email" class="form-label">Email adresa *</label>
                             <input type="email" class="form-control" id="email" th:field="*{email}" required>
-                            <div class="text-danger small" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
                         </div>
                         
                         <div class="mb-3">

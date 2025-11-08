@@ -3,24 +3,24 @@ package com.example.danceschool.model;
 import java.time.LocalDateTime;
 
 /**
- * Raspored (Schedule) model - Pure POJO without database annotations.
- * Represents a dance class schedule entry.
+ * Model rasporeda - Čist POJO bez anotacija za bazu podataka.
+ * Predstavlja unos u rasporedu časova plesa.
  */
 public class Raspored {
     
     private Long id;
-    private String tipCasa; // 'balet', 'hiphop', 'latino'
-    private Long instruktorId;
-    private LocalDateTime datumVreme;
-    private Integer trajanjeMin = 60;
+    private String tip_casa; // 'balet', 'hiphop', 'latino'
+    private Long instruktor_id;
+    private LocalDateTime datum_vreme;
+    private Integer trajanje_min = 60;
     private String lokacija;
-    private Integer maksimalnoPolaznika = 15;
+    private Integer maksimalno_polaznika = 15;
     private String opis;
-    private Long keiraoId;
-    private LocalDateTime datumKreiranja;
+    private Long kreirao_id;
+    private LocalDateTime datum_kreiranja;
     
     public Raspored() {
-        this.datumKreiranja = LocalDateTime.now();
+        this.datum_kreiranja = LocalDateTime.now();
     }
     
     // Getteri i Setteri
@@ -32,36 +32,36 @@ public class Raspored {
         this.id = id;
     }
     
-    public String getTipCasa() {
-        return tipCasa;
+    public String getTip_casa() {
+        return tip_casa;
     }
     
-    public void setTipCasa(String tipCasa) {
-        this.tipCasa = tipCasa;
+    public void setTip_casa(String tip_casa) {
+        this.tip_casa = tip_casa;
     }
     
-    public Long getInstruktorId() {
-        return instruktorId;
+    public Long getInstruktor_id() {
+        return instruktor_id;
     }
     
-    public void setInstruktorId(Long instruktorId) {
-        this.instruktorId = instruktorId;
+    public void setInstruktor_id(Long instruktor_id) {
+        this.instruktor_id = instruktor_id;
     }
     
-    public LocalDateTime getDatumVreme() {
-        return datumVreme;
+    public LocalDateTime getDatum_vreme() {
+        return datum_vreme;
     }
     
-    public void setDatumVreme(LocalDateTime datumVreme) {
-        this.datumVreme = datumVreme;
+    public void setDatum_vreme(LocalDateTime datum_vreme) {
+        this.datum_vreme = datum_vreme;
     }
     
-    public Integer getTrajanjeMin() {
-        return trajanjeMin;
+    public Integer getTrajanje_min() {
+        return trajanje_min;
     }
     
-    public void setTrajanjeMin(Integer trajanjeMin) {
-        this.trajanjeMin = trajanjeMin;
+    public void setTrajanje_min(Integer trajanje_min) {
+        this.trajanje_min = trajanje_min;
     }
     
     public String getLokacija() {
@@ -72,12 +72,12 @@ public class Raspored {
         this.lokacija = lokacija;
     }
     
-    public Integer getMaksimalnoPolaznika() {
-        return maksimalnoPolaznika;
+    public Integer getMaksimalno_polaznika() {
+        return maksimalno_polaznika;
     }
     
-    public void setMaksimalnoPolaznika(Integer maksimalnoPolaznika) {
-        this.maksimalnoPolaznika = maksimalnoPolaznika;
+    public void setMaksimalno_polaznika(Integer maksimalno_polaznika) {
+        this.maksimalno_polaznika = maksimalno_polaznika;
     }
     
     public String getOpis() {
@@ -88,19 +88,19 @@ public class Raspored {
         this.opis = opis;
     }
     
-    public Long getKeiraoId() {
-        return keiraoId;
+    public Long getKreirao_id() {
+        return kreirao_id;
     }
     
-    public void setKeiraoId(Long keiraoId) {
-        this.keiraoId = keiraoId;
+    public void setKreirao_id(Long kreirao_id) {
+        this.kreirao_id = kreirao_id;
     }
     
-    public LocalDateTime getDatumKreiranja() {
-        return datumKreiranja;
+    public LocalDateTime getDatum_kreiranja() {
+        return datum_kreiranja;
     }
     
-    public void setDatumKreiranja(LocalDateTime datumKreiranja) {
-        this.datumKreiranja = datumKreiranja;
+    public void setDatum_kreiranja(LocalDateTime datum_kreiranja) {
+        this.datum_kreiranja = datum_kreiranja;
     }
 }

@@ -21,17 +21,17 @@
         <div class="collapse navbar-collapse" id="nav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" th:href="@{/}" href="/">Početna</a></li>
-                <li class="nav-item" th:if="${!viewModel.loggedIn || viewModel.learner}"><a class="nav-link active" th:href="@{/classes}" href="/classes">Časovi</a></li>
-                <li class="nav-item" th:if="${viewModel.loggedIn}"><a class="nav-link" th:href="@{/raspored}" href="/raspored">Raspored</a></li>
+                <li class="nav-item"><a class="nav-link active" th:href="@{/classes}" href="/classes">Časovi</a></li>
+                <li class="nav-item" th:if="${classesViewModel.ime_korisnika != null}"><a class="nav-link" th:href="@{/raspored}" href="/raspored">Raspored</a></li>
                 <li class="nav-item"><a class="nav-link" href="#kontakt">Kontakt</a></li>
-                <li class="nav-item" th:if="${!viewModel.loggedIn}">
+                <li class="nav-item" th:if="${classesViewModel.ime_korisnika == null}">
                     <a class="btn btn-outline-light ms-2 btn-prijava" th:href="@{/login}" href="/login" role="button">Prijava</a>
                 </li>
-                <li class="nav-item dropdown" th:if="${viewModel.loggedIn}">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span th:text="${viewModel.username}">Korisnik</span>
+                <li class="nav-item dropdown" th:if="${classesViewModel.ime_korisnika != null}">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span th:text="${classesViewModel.ime_korisnika}">Korisnik</span>
                     </a>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                         <li><a class="dropdown-item" th:href="@{/logout}" href="/logout">Odjavi se</a></li>
                     </ul>
                 </li>
@@ -58,17 +58,19 @@
                     <p class="mt-auto">Trajanje: 60 min · Nivo: Početni</p>
                     
                     <!-- Ako je korisnik prijavljen i nije prijavljen na čas -->
-                    <form th:if="${viewModel.loggedIn and !viewModel.enrolledBalet}" th:action="@{/enrollment/enroll/balet}" method="post" class="d-inline">
+                    <form th:if="${classesViewModel.ime_korisnika != null and !classesViewModel.upisan_balet}" th:action="@{/classes/enroll}" method="post" class="d-inline">
+                        <input type="hidden" name="tip_casa" value="balet" />
                         <button type="submit" class="btn btn-outline-primary mt-3 align-self-start">Prijavi me</button>
                     </form>
                     
                     <!-- Ako je korisnik prijavljen i prijavljen je na čas -->
-                    <form th:if="${viewModel.loggedIn and viewModel.enrolledBalet}" th:action="@{/enrollment/unenroll/balet}" method="post" class="d-inline">
+                    <form th:if="${classesViewModel.ime_korisnika != null and classesViewModel.upisan_balet}" th:action="@{/classes/unenroll}" method="post" class="d-inline">
+                        <input type="hidden" name="tip_casa" value="balet" />
                         <button type="submit" class="btn btn-outline-danger mt-3 align-self-start">Odjavi me</button>
                     </form>
                     
                     <!-- Ako korisnik nije prijavljen -->
-                    <a th:if="${!viewModel.loggedIn}" class="btn btn-outline-primary mt-3 align-self-start" th:href="@{/login}">Prijavite se prvo</a>
+                    <a th:if="${classesViewModel.ime_korisnika == null}" class="btn btn-outline-primary mt-3 align-self-start" th:href="@{/login}">Prijavite se prvo</a>
                 </div>
             </article>
         </div>
@@ -81,17 +83,19 @@
                     <p class="mt-auto">Trajanje: 75 min · Nivo: Srednji</p>
                     
                     <!-- Ako je korisnik prijavljen i nije prijavljen na čas -->
-                    <form th:if="${viewModel.loggedIn and !viewModel.enrolledHiphop}" th:action="@{/enrollment/enroll/hiphop}" method="post" class="d-inline">
+                    <form th:if="${classesViewModel.ime_korisnika != null and !classesViewModel.upisan_hiphop}" th:action="@{/classes/enroll}" method="post" class="d-inline">
+                        <input type="hidden" name="tip_casa" value="hiphop" />
                         <button type="submit" class="btn btn-outline-primary mt-3 align-self-start">Prijavi me</button>
                     </form>
                     
                     <!-- Ako je korisnik prijavljen i prijavljen je na čas -->
-                    <form th:if="${viewModel.loggedIn and viewModel.enrolledHiphop}" th:action="@{/enrollment/unenroll/hiphop}" method="post" class="d-inline">
+                    <form th:if="${classesViewModel.ime_korisnika != null and classesViewModel.upisan_hiphop}" th:action="@{/classes/unenroll}" method="post" class="d-inline">
+                        <input type="hidden" name="tip_casa" value="hiphop" />
                         <button type="submit" class="btn btn-outline-danger mt-3 align-self-start">Odjavi me</button>
                     </form>
                     
                     <!-- Ako korisnik nije prijavljen -->
-                    <a th:if="${!viewModel.loggedIn}" class="btn btn-outline-primary mt-3 align-self-start" th:href="@{/login}">Prijavite se prvo</a>
+                    <a th:if="${classesViewModel.ime_korisnika == null}" class="btn btn-outline-primary mt-3 align-self-start" th:href="@{/login}">Prijavite se prvo</a>
                 </div>
             </article>
         </div>
@@ -104,17 +108,19 @@
                     <p class="mt-auto">Trajanje: 60 min · Nivo: Svi nivoi</p>
                     
                     <!-- Ako je korisnik prijavljen i nije prijavljen na čas -->
-                    <form th:if="${viewModel.loggedIn and !viewModel.enrolledLatino}" th:action="@{/enrollment/enroll/latino}" method="post" class="d-inline">
+                    <form th:if="${classesViewModel.ime_korisnika != null and !classesViewModel.upisan_latino}" th:action="@{/classes/enroll}" method="post" class="d-inline">
+                        <input type="hidden" name="tip_casa" value="latino" />
                         <button type="submit" class="btn btn-outline-primary mt-3 align-self-start">Prijavi me</button>
                     </form>
                     
                     <!-- Ako je korisnik prijavljen i prijavljen je na čas -->
-                    <form th:if="${viewModel.loggedIn and viewModel.enrolledLatino}" th:action="@{/enrollment/unenroll/latino}" method="post" class="d-inline">
+                    <form th:if="${classesViewModel.ime_korisnika != null and classesViewModel.upisan_latino}" th:action="@{/classes/unenroll}" method="post" class="d-inline">
+                        <input type="hidden" name="tip_casa" value="latino" />
                         <button type="submit" class="btn btn-outline-danger mt-3 align-self-start">Odjavi me</button>
                     </form>
                     
                     <!-- Ako korisnik nije prijavljen -->
-                    <a th:if="${!viewModel.loggedIn}" class="btn btn-outline-primary mt-3 align-self-start" th:href="@{/login}">Prijavite se prvo</a>
+                    <a th:if="${classesViewModel.ime_korisnika == null}" class="btn btn-outline-primary mt-3 align-self-start" th:href="@{/login}">Prijavite se prvo</a>
                 </div>
             </article>
         </div>

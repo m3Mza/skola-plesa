@@ -1,57 +1,34 @@
 package com.example.danceschool.model;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
+import java.io.Serializable;
 
 /**
- * User model - Pure POJO without database annotations.
- * Validation annotations are kept as they're part of business logic, not database technology.
+ * User model wrapping Korisnik for session management
  */
-public class User {
+public class User implements Serializable {
+    private static final long serialVersionUID = 1L;
     
     private Long id;
-    
-    @NotBlank(message = "Ime je obavezno")
-    @Size(max = 100)
     private String ime;
-    
-    @NotBlank(message = "Prezime je obavezno")
-    @Size(max = 100)
     private String prezime;
-    
-    @NotBlank(message = "Email je obavezan")
-    @Email(message = "Unesite validnu email adresu")
-    @Size(max = 255)
     private String email;
-    
-    @NotBlank(message = "Lozinka je obavezna")
-    @Size(min = 6, message = "Lozinka mora imati minimum 6 karaktera")
-    private String lozinka;
-    
-    @Size(max = 20)
     private String telefon;
+    private String uloga;
+    private boolean instruktor;
     
-    private LocalDateTime datumRegistracije;
-    private String uloga = "ucenik"; // 'ucenik' ili 'instruktor'
-    private Boolean aktivan = true;
-    
-    // Konstruktori
     public User() {
-        this.datumRegistracije = LocalDateTime.now();
-        this.uloga = "ucenik";
     }
     
-    public User(String ime, String prezime, String email, String lozinka) {
-        this.ime = ime;
-        this.prezime = prezime;
-        this.email = email;
-        this.lozinka = lozinka;
-        this.datumRegistracije = LocalDateTime.now();
+    public User(Korisnik korisnik) {
+        this.id = korisnik.getId();
+        this.ime = korisnik.getIme();
+        this.prezime = korisnik.getPrezime();
+        this.email = korisnik.getEmail();
+        this.telefon = korisnik.getTelefon();
+        this.uloga = korisnik.getUloga();
+        this.instruktor = korisnik.je_instruktor();
     }
     
-    // Getteri i Setteri
     public Long getId() {
         return id;
     }
@@ -84,36 +61,12 @@ public class User {
         this.email = email;
     }
     
-    public String getLozinka() {
-        return lozinka;
-    }
-    
-    public void setLozinka(String lozinka) {
-        this.lozinka = lozinka;
-    }
-    
     public String getTelefon() {
         return telefon;
     }
     
     public void setTelefon(String telefon) {
         this.telefon = telefon;
-    }
-    
-    public LocalDateTime getDatumRegistracije() {
-        return datumRegistracije;
-    }
-    
-    public void setDatumRegistracije(LocalDateTime datumRegistracije) {
-        this.datumRegistracije = datumRegistracije;
-    }
-    
-    public Boolean getAktivan() {
-        return aktivan;
-    }
-    
-    public void setAktivan(Boolean aktivan) {
-        this.aktivan = aktivan;
     }
     
     public String getUloga() {
@@ -125,14 +78,14 @@ public class User {
     }
     
     public boolean isInstruktor() {
-        return "instruktor".equals(uloga);
+        return instruktor;
     }
     
-    public boolean isUcenik() {
-        return "ucenik".equals(uloga);
+    public void setInstruktor(boolean instruktor) {
+        this.instruktor = instruktor;
     }
     
-    public String getPunoIme() {
+    public String getFullName() {
         return ime + " " + prezime;
     }
 }

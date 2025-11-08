@@ -1,9 +1,9 @@
 package com.example.danceschool.endpoint;
 
+import com.example.danceschool.model.Korisnik;
 import com.example.danceschool.model.Raspored;
-import com.example.danceschool.model.User;
-import com.example.danceschool.repository.UserRepository;
-import com.example.danceschool.service.RasporedService;
+import com.example.danceschool.repository.KorisnikRepozitorijum;
+import com.example.danceschool.service.RasporedServis;
 import com.example.danceschool.raspored.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
@@ -20,16 +20,19 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * SOAP Endpoint za upravljanje rasporedom časova.
+ */
 @Endpoint
 public class RasporedSoapEndpoint {
 
     private static final String NAMESPACE_URI = "http://danceschool.example.com/raspored";
 
     @Autowired
-    private RasporedService rasporedService;
+    private RasporedServis raspored_servis;
 
     @Autowired
-    private UserRepository userRepository;
+    private KorisnikRepozitorijum korisnik_repozitorijum;
 
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "GetAllSchedulesRequest")
     @ResponsePayload
@@ -37,24 +40,21 @@ public class RasporedSoapEndpoint {
         GetAllSchedulesResponse response = new GetAllSchedulesResponse();
 
         try {
-            // Get user
-            Optional<User> userOpt = userRepository.findById(request.getUserId());
-            if (!userOpt.isPresent()) {
-                return response; // Return empty list
+            Optional<Korisnik> korisnik_opt = korisnik_repozitorijum.pronadji_po_id(request.getUserId());
+            if (!korisnik_opt.isPresent()) {
+                return response;
             }
 
-            User user = userOpt.get();
-            List<Raspored> schedules = rasporedService.getScheduleForUser(user);
+            Korisnik korisnik = korisnik_opt.get();
+            List<Raspored> rasporedi = raspored_servis.dobavi_raspored_za_korisnika(korisnik);
 
-            // Convert to SOAP response types
-            for (Raspored raspored : schedules) {
-                RasporedType rasporedType = convertToRasporedType(raspored);
-                response.getSchedule().add(rasporedType);
+            for (Raspored raspored : rasporedi) {
+                RasporedType raspored_type = konvertuj_u_raspored_type(raspored);
+                response.getSchedule().add(raspored_type);
             }
 
         } catch (Exception e) {
-            // Log error and return empty response
-            System.err.println("Error in getAllSchedules: " + e.getMessage());
+            System.err.println("GREŠKA u getAllSchedules: " + e.getMessage());
         }
 
         return response;
@@ -66,26 +66,24 @@ public class RasporedSoapEndpoint {
         GetSchedulesByClassTypeResponse response = new GetSchedulesByClassTypeResponse();
 
         try {
-            // Get user
-            Optional<User> userOpt = userRepository.findById(request.getUserId());
-            if (!userOpt.isPresent()) {
-                return response; // Return empty list
+            Optional<Korisnik> korisnik_opt = korisnik_repozitorijum.pronadji_po_id(request.getUserId());
+            if (!korisnik_opt.isPresent()) {
+                return response;
             }
 
-            User user = userOpt.get();
-            List<Raspored> schedules = rasporedService.getScheduleForUser(user);
+            Korisnik korisnik = korisnik_opt.get();
+            List<Raspored> rasporedi = raspored_servis.dobavi_raspored_za_korisnika(korisnik);
 
-            // Filter by class type
-            String classType = request.getClassType().value();
-            for (Raspored raspored : schedules) {
-                if (raspored.getTipCasa().equalsIgnoreCase(classType)) {
-                    RasporedType rasporedType = convertToRasporedType(raspored);
-                    response.getSchedule().add(rasporedType);
+            String tip_casa = request.getClassType().value();
+            for (Raspored raspored : rasporedi) {
+                if (raspored.getTip_casa().equalsIgnoreCase(tip_casa)) {
+                    RasporedType raspored_type = konvertuj_u_raspored_type(raspored);
+                    response.getSchedule().add(raspored_type);
                 }
             }
 
         } catch (Exception e) {
-            System.err.println("Error in getSchedulesByClassType: " + e.getMessage());
+            System.err.println("GREŠKA u getSchedulesByClassType: " + e.getMessage());
         }
 
         return response;
@@ -97,49 +95,43 @@ public class RasporedSoapEndpoint {
         AddScheduleResponse response = new AddScheduleResponse();
 
         try {
-            // Get user
-            Optional<User> userOpt = userRepository.findById(request.getUserId());
-            if (!userOpt.isPresent()) {
+            Optional<Korisnik> korisnik_opt = korisnik_repozitorijum.pronadji_po_id(request.getUserId());
+            if (!korisnik_opt.isPresent()) {
                 response.setSuccess(false);
-                response.setMessage("User not found");
+                response.setMessage("Korisnik nije pronađen");
                 return response;
             }
 
-            User user = userOpt.get();
+            Korisnik korisnik = korisnik_opt.get();
 
-            // Convert XMLGregorianCalendar to LocalDateTime
-            LocalDateTime datumVreme = convertToLocalDateTime(request.getDatumVreme());
+            LocalDateTime datum_vreme = konvertuj_u_local_date_time(request.getDatumVreme());
 
-            // Get instruktorId (use request instruktorId if provided, otherwise use current user)
-            Long instruktorId = request.getInstruktorId() != null ? request.getInstruktorId() : user.getId();
-
-            // Call service
-            Raspored newRaspored = rasporedService.addSchedule(
-                    user,
+            Raspored novi_raspored = raspored_servis.dodaj_raspored(
+                    korisnik,
                     request.getTipCasa().value(),
-                    datumVreme,
+                    datum_vreme,
                     request.getTrajanjeMin(),
                     request.getLokacija(),
-                    request.getOpis(),
-                    instruktorId
+                    15, // Default maksimalno_polaznika
+                    request.getOpis()
             );
 
-            if (newRaspored != null) {
+            if (novi_raspored != null) {
                 response.setSuccess(true);
-                response.setMessage("Schedule added successfully");
-                response.setSchedule(convertToRasporedType(newRaspored));
+                response.setMessage("Raspored uspešno dodat");
+                response.setSchedule(konvertuj_u_raspored_type(novi_raspored));
             } else {
                 response.setSuccess(false);
-                response.setMessage("Failed to add schedule");
+                response.setMessage("Neuspelo dodavanje rasporeda");
             }
 
-        } catch (IllegalArgumentException e) {
+        } catch (RuntimeException e) {
             response.setSuccess(false);
             response.setMessage(e.getMessage());
         } catch (Exception e) {
             response.setSuccess(false);
-            response.setMessage("Internal error: " + e.getMessage());
-            System.err.println("Error in addSchedule: " + e.getMessage());
+            response.setMessage("Interna greška: " + e.getMessage());
+            System.err.println("GREŠKA u addSchedule: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -152,75 +144,82 @@ public class RasporedSoapEndpoint {
         DeleteScheduleResponse response = new DeleteScheduleResponse();
 
         try {
-            // Get user
-            Optional<User> userOpt = userRepository.findById(request.getUserId());
-            if (!userOpt.isPresent()) {
+            Optional<Korisnik> korisnik_opt = korisnik_repozitorijum.pronadji_po_id(request.getUserId());
+            if (!korisnik_opt.isPresent()) {
                 response.setSuccess(false);
-                response.setMessage("User not found");
+                response.setMessage("Korisnik nije pronađen");
                 return response;
             }
 
-            User user = userOpt.get();
+            Korisnik korisnik = korisnik_opt.get();
 
-            // Call service
-            rasporedService.deleteSchedule(user, request.getScheduleId());
+            String rezultat = raspored_servis.obrisi_raspored(korisnik, request.getScheduleId());
 
-            response.setSuccess(true);
-            response.setMessage("Schedule deleted successfully");
+            if (rezultat.startsWith("USPEH")) {
+                response.setSuccess(true);
+                response.setMessage("Raspored uspešno obrisan");
+            } else {
+                response.setSuccess(false);
+                response.setMessage(rezultat);
+            }
 
-        } catch (IllegalArgumentException e) {
-            response.setSuccess(false);
-            response.setMessage(e.getMessage());
         } catch (Exception e) {
             response.setSuccess(false);
-            response.setMessage("Internal error: " + e.getMessage());
-            System.err.println("Error in deleteSchedule: " + e.getMessage());
+            response.setMessage("Interna greška: " + e.getMessage());
+            System.err.println("GREŠKA u deleteSchedule: " + e.getMessage());
         }
 
         return response;
     }
 
-    // Helper methods
-    private RasporedType convertToRasporedType(Raspored raspored) {
-        RasporedType rasporedType = new RasporedType();
-        rasporedType.setId(raspored.getId());
-        rasporedType.setTipCasa(raspored.getTipCasa());
-        rasporedType.setDatumVreme(convertToXMLGregorianCalendar(raspored.getDatumVreme()));
-        rasporedType.setTrajanjeMin(raspored.getTrajanjeMin());
-        rasporedType.setLokacija(raspored.getLokacija());
-        rasporedType.setOpis(raspored.getOpis());
-        rasporedType.setInstruktorId(raspored.getInstruktorId());
+    /**
+     * Konvertuje Raspored model u SOAP RasporedType.
+     */
+    private RasporedType konvertuj_u_raspored_type(Raspored raspored) {
+        RasporedType raspored_type = new RasporedType();
+        raspored_type.setId(raspored.getId());
+        raspored_type.setTipCasa(raspored.getTip_casa());
+        raspored_type.setDatumVreme(konvertuj_u_xml_gregorian_calendar(raspored.getDatum_vreme()));
+        raspored_type.setTrajanjeMin(raspored.getTrajanje_min());
+        raspored_type.setLokacija(raspored.getLokacija());
+        raspored_type.setOpis(raspored.getOpis());
+        raspored_type.setInstruktorId(raspored.getInstruktor_id());
 
-        // Optional: fetch instructor name
-        if (raspored.getInstruktorId() != null) {
-            userRepository.findById(raspored.getInstruktorId()).ifPresent(instructor -> {
-                rasporedType.setInstruktorIme(instructor.getIme() + " " + instructor.getPrezime());
+        if (raspored.getInstruktor_id() != null) {
+            korisnik_repozitorijum.pronadji_po_id(raspored.getInstruktor_id()).ifPresent(instruktor -> {
+                raspored_type.setInstruktorIme(instruktor.getIme() + " " + instruktor.getPrezime());
             });
         }
 
-        return rasporedType;
+        return raspored_type;
     }
 
-    private XMLGregorianCalendar convertToXMLGregorianCalendar(LocalDateTime localDateTime) {
-        if (localDateTime == null) {
+    /**
+     * Konvertuje LocalDateTime u XMLGregorianCalendar.
+     */
+    private XMLGregorianCalendar konvertuj_u_xml_gregorian_calendar(LocalDateTime local_date_time) {
+        if (local_date_time == null) {
             return null;
         }
         try {
-            GregorianCalendar gregorianCalendar = GregorianCalendar.from(
-                    localDateTime.atZone(ZoneId.systemDefault())
+            GregorianCalendar gregorian_calendar = GregorianCalendar.from(
+                    local_date_time.atZone(ZoneId.systemDefault())
             );
-            return DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
+            return DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorian_calendar);
         } catch (DatatypeConfigurationException e) {
-            System.err.println("Error converting to XMLGregorianCalendar: " + e.getMessage());
+            System.err.println("GREŠKA pri konverziji u XMLGregorianCalendar: " + e.getMessage());
             return null;
         }
     }
 
-    private LocalDateTime convertToLocalDateTime(XMLGregorianCalendar xmlGregorianCalendar) {
-        if (xmlGregorianCalendar == null) {
+    /**
+     * Konvertuje XMLGregorianCalendar u LocalDateTime.
+     */
+    private LocalDateTime konvertuj_u_local_date_time(XMLGregorianCalendar xml_gregorian_calendar) {
+        if (xml_gregorian_calendar == null) {
             return null;
         }
-        return xmlGregorianCalendar.toGregorianCalendar()
+        return xml_gregorian_calendar.toGregorianCalendar()
                 .toZonedDateTime()
                 .toLocalDateTime();
     }

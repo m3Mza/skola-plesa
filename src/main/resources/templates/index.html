@@ -24,17 +24,17 @@
         <div class="collapse navbar-collapse" id="nav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link active" th:href="@{/}" href="/">Početna</a></li>
-                <li class="nav-item" th:if="${!viewModel.loggedIn || viewModel.learner}"><a class="nav-link" th:href="@{/classes}" href="/classes">Časovi</a></li>
-                <li class="nav-item" th:if="${viewModel.loggedIn}"><a class="nav-link" th:href="@{/raspored}" href="/raspored">Raspored</a></li>
+                <li class="nav-item" th:if="${!homeViewModel.prijavljen || !homeViewModel.instruktor}"><a class="nav-link" th:href="@{/classes}" href="/classes">Časovi</a></li>
+                <li class="nav-item" th:if="${homeViewModel.prijavljen}"><a class="nav-link" th:href="@{/raspored}" href="/raspored">Raspored</a></li>
                 <li class="nav-item"><a class="nav-link" href="#kontakt">Kontakt</a></li>
-                <li class="nav-item" th:if="${!viewModel.loggedIn}">
+                <li class="nav-item" th:if="${!homeViewModel.prijavljen}">
                     <a class="btn btn-outline-light ms-2 btn-prijava" th:href="@{/login}" href="/login" role="button">Prijava</a>
                 </li>
-                <li class="nav-item dropdown" th:if="${viewModel.loggedIn}">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span th:text="${viewModel.username}">Korisnik</span>
+                <li class="nav-item dropdown" th:if="${homeViewModel.prijavljen}">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span th:text="${homeViewModel.ime_korisnika}">Korisnik</span>
                     </a>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                         <li><a class="dropdown-item" th:href="@{/logout}" href="/logout">Odjavi se</a></li>
                     </ul>
                 </li>
@@ -47,8 +47,8 @@
     <div class="container text-center">
         <h1 class="display-4">Dobrodošli u Škola plesa</h1>
         <p class="lead">Časovi plesa za sve uzraste — pronađite ritam, steknite prijatelje i zabavite se.</p>
-        <a th:if="${viewModel.instructor}" class="btn btn-primary btn-lg" th:href="@{/raspored}" href="/raspored">Kreirajte termine</a>
-        <a th:unless="${viewModel.instructor}" class="btn btn-primary btn-lg" th:href="@{/classes}" href="/classes">Pogledajte časove</a>
+        <a th:if="${homeViewModel.instruktor}" class="btn btn-primary btn-lg" th:href="@{/raspored}" href="/raspored">Kreirajte termine</a>
+        <a th:unless="${homeViewModel.instruktor}" class="btn btn-primary btn-lg" th:href="@{/classes}" href="/classes">Pogledajte časove</a>
     </div>
 </header>
 
