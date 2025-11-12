@@ -1,7 +1,7 @@
 package com.example.danceschool.controller;
 
 import com.example.danceschool.model.*;
-import com.example.danceschool.service.RasporedService;
+import com.example.danceschool.service.RasporedServis;
 import com.example.danceschool.service.KorisnikServis;
 import com.example.danceschool.viewmodel.RasporedViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +13,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Controller
@@ -20,7 +22,7 @@ import java.util.*;
 public class RasporedController {
     
     @Autowired
-    private RasporedService rasporedService;
+    private RasporedServis rasporedServis;
     
     @Autowired
     private KorisnikServis korisnikServis;
@@ -31,7 +33,7 @@ public class RasporedController {
     @GetMapping
     public String showRaspored(Model model, RedirectAttributes redirectAttributes) {
         
-        // Get authenticated user from Spring Security
+        // autentikacija (da li je prijavljen)
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         
         if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
@@ -48,14 +50,15 @@ public class RasporedController {
         }
         
         Korisnik korisnik = korisnikOpt.get();
-        User loggedInUser = new User(korisnik);
         
-        // Get schedule data
-        List<Raspored> casovi = rasporedService.getScheduleForUser(loggedInUser);
+        System.out.println("DEBUG: Korisnik prijavljen - " + korisnik.getIme() + " " + korisnik.getPrezime() + " (uloga: " + korisnik.getUloga() + ")");
+        
+        // Prikaz rasporeda
+        List<Raspored> casovi = rasporedServis.dobavi_raspored_za_korisnika(korisnik);
         
         // Build RasporedViewModel
         RasporedViewModel viewModel = new RasporedViewModel(
-            loggedInUser.getFullName(), 
+            korisnik.getIme() + " " + korisnik.getPrezime(), 
             korisnik.getUloga(), 
             true, 
             korisnik.getId(), 
@@ -63,7 +66,6 @@ public class RasporedController {
         );
         
         model.addAttribute("viewModel", viewModel);
-        model.addAttribute("user", loggedInUser);
         
         return "raspored";
     }
@@ -85,12 +87,12 @@ public class RasporedController {
             return "redirect:/raspored";
         }
         
-        User loggedInUser = new User(korisnikOpt.get());
+        Korisnik korisnik = korisnikOpt.get();
         
         try {
-            rasporedService.addSchedule(loggedInUser, raspored.getTip_casa(), 
+            rasporedServis.dodaj_raspored(korisnik, raspored.getTip_casa(), 
                                        raspored.getDatum_vreme(), raspored.getTrajanje_min(),
-                                       raspored.getLokacija(), raspored.getOpis(), loggedInUser.getId());
+                                       raspored.getLokacija(), raspored.getMaksimalno_polaznika(), raspored.getOpis());
             redirectAttributes.addFlashAttribute("success", "Čas uspešno dodat u raspored!");
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -119,10 +121,10 @@ public class RasporedController {
             return "redirect:/raspored";
         }
         
-        User loggedInUser = new User(korisnikOpt.get());
+        Korisnik korisnik = korisnikOpt.get();
         
         try {
-            rasporedService.deleteSchedule(loggedInUser, id);
+            rasporedServis.obrisi_raspored(korisnik, id);
             redirectAttributes.addFlashAttribute("success", "Čas uspešno obrisan iz rasporeda!");
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -157,10 +159,13 @@ public class RasporedController {
             return "redirect:/raspored";
         }
         
-        User loggedInUser = new User(korisnikOpt.get());
+        Korisnik korisnik = korisnikOpt.get();
         
         try {
-            rasporedService.updateSchedule(loggedInUser, rasporedId, tip_casa, datum_vreme, 
+            // Parse datum_vreme string to LocalDateTime
+            LocalDateTime datumVremeObj = LocalDateTime.parse(datum_vreme, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            
+            rasporedServis.azuriraj_raspored(korisnik.getId(), rasporedId, tip_casa, datumVremeObj, 
                                           trajanje_min, lokacija, maksimalno_polaznika, opis);
             redirectAttributes.addFlashAttribute("success", "Čas uspešno ažuriran!");
         } catch (IllegalArgumentException e) {

@@ -14,7 +14,6 @@ import java.util.List;
 
 /**
  * DAO objekat za pristup podacima upisa na latino časove.
- * Rukuje SQL operacijama i stored procedures za latino upise.
  */
 @Repository
 public class UpisLatinoDAO {

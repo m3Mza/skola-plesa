@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Kontroler za upravljanje časovima (prijava i odjava sa časova).
+ * Kontroler za prijavu i odjavu sa casova (Korisnik)
  */
 @Controller
 public class CasoviKontroler {
@@ -50,7 +50,7 @@ public class CasoviKontroler {
                 Korisnik korisnik = korisnik_opt.get();
                 view_model.setIme_korisnika(korisnik.getPuno_ime());
                 
-                // Dobavi status upisa za sve tipove časova
+                // Dobavlja upise za sve casove
                 Map<String, Boolean> status_upisa = upis_servis.dobavi_status_upisa(korisnik);
                 view_model.setUpisan_balet(status_upisa.getOrDefault("balet", false));
                 view_model.setUpisan_hiphop(status_upisa.getOrDefault("hiphop", false));

@@ -14,7 +14,6 @@ import java.util.List;
 
 /**
  * DAO objekat za pristup podacima upisa na balet časove.
- * Rukuje SQL operacijama i stored procedures za balet upise.
  */
 @Repository
 public class UpisBaletDAO {

@@ -11,7 +11,7 @@ import java.util.Optional;
 
 /**
  * DAO objekat za pristup podacima korisnika.
- * Razdvaja tehnologiju baze podataka (SQL, DBUtils) od poslovne logike.
+ * Razdvaja tehnologiju baze podataka od poslovne logike.
  */
 @Repository
 public class KorisnikDAO {

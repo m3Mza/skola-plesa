@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * Maper koji preslikava redove iz baze podataka u Korisnik objekte.
- * Rukuje mapiranjem snake_case (baza) -> camelCase (Java) konverzijom.
  */
 public class MaperRedovaKorisnika implements ResultSetHandler<List<Korisnik>> {
     

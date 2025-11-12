@@ -9,9 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repozitorijum implementacija za Korisnik entitet koristeći DAO obrazac.
- * Sledi Repository pattern - pruža apstrakciju višeg nivoa nad DAO slojem,
- * sakrivajući SQL izuzetke i logiku specifičnu za bazu podataka.
+ * Korisnik repozitorijum, apstrakcija nad DAO slojem
  */
 @Repository
 public class KorisnikRepozitorijum {

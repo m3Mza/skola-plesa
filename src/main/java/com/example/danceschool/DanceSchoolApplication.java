@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class DanceSchoolApplication {
 
-    // Glavna klasa aplikacije. Pokreće Spring Boot aplikaciju.
+    // Glavna klasa aplikacije. Pokrece aplikaciju
     public static void main(String[] args) {
         SpringApplication.run(DanceSchoolApplication.class, args);
     }

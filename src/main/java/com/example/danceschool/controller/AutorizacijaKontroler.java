@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * Kontroler za autorizaciju korisnika (prijava i registracija).
+ * Kontroler za autorizaciju (prijava, registracija, odjava)
  */
 @Controller
 public class AutorizacijaKontroler {

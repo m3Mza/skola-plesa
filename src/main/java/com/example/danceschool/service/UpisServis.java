@@ -5,8 +5,7 @@ import com.example.danceschool.repository.UpisRepozitorijum;
 import org.springframework.stereotype.Service;
 
 /**
- * Servis za upravljanje upisima korisnika na časove.
- * Sadrži poslovnu logiku za prijavu i odjavu sa časova.
+ * Servis za upravljanje prijava i odjava za casove
  */
 @Service
 public class UpisServis {

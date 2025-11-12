@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * Bazni maper koji preslikava redove iz baze podataka u Upis objekte.
- * Rukuje mapiranjem snake_case (baza) -> camelCase (Java) konverzijom.
  */
 public class MaperRedovaUpisa<T extends Upis> implements ResultSetHandler<List<T>> {
     

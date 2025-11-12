@@ -30,7 +30,7 @@ public class PocetnaKontroler {
     public String prikaziPocetnu(Model model) {
         PocetnaViewModel view_model = new PocetnaViewModel();
         
-        // Preuzmi trenutno prijavljenog korisnika
+        // Da li je korisnik prijavljen?
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         
         if (auth != null && auth.isAuthenticated() && 

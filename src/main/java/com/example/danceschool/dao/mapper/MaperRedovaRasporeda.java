@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * Maper koji preslikava redove iz baze podataka u Raspored objekte.
- * Rukuje mapiranjem snake_case (baza) -> camelCase (Java) konverzijom.
  */
 public class MaperRedovaRasporeda implements ResultSetHandler<List<Raspored>> {
     

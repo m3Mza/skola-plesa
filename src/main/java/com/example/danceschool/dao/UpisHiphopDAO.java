@@ -14,7 +14,6 @@ import java.util.List;
 
 /**
  * DAO objekat za pristup podacima upisa na hiphop časove.
- * Rukuje SQL operacijama i stored procedures za hiphop upise.
  */
 @Repository
 public class UpisHiphopDAO {

@@ -26,7 +26,7 @@
         </xs:sequence>
     </xs:complexType>
 
-    <!-- Get All Schedules Request/Response -->
+    <!-- Uzima sve rasporede -->
     <xs:element name="GetAllSchedulesRequest">
         <xs:complexType>
             <xs:sequence>
@@ -43,7 +43,7 @@
         </xs:complexType>
     </xs:element>
 
-    <!-- Get Schedules By Class Type Request/Response -->
+    <!-- Uzima rasporede po tipu casa -->
     <xs:element name="GetSchedulesByClassTypeRequest">
         <xs:complexType>
             <xs:sequence>
@@ -61,7 +61,7 @@
         </xs:complexType>
     </xs:element>
 
-    <!-- Add Schedule Request/Response -->
+    <!-- Dodaj cas -->
     <xs:element name="AddScheduleRequest">
         <xs:complexType>
             <xs:sequence>
@@ -86,7 +86,7 @@
         </xs:complexType>
     </xs:element>
 
-    <!-- Delete Schedule Request/Response -->
+    <!-- Brisanje casa -->
     <xs:element name="DeleteScheduleRequest">
         <xs:complexType>
             <xs:sequence>
