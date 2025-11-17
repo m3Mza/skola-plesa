@@ -123,11 +123,11 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="lokacija" class="form-label">Lokacija</label>
-                        <input type="text" class="form-control" id="lokacija" name="lokacija" value="Sala 1">
+                        <input type="text" class="form-control" id="lokacija" name="lokacija" value="Sala 1" required>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="maksimalno_polaznika" class="form-label">Max polaznika</label>
-                        <input type="number" class="form-control" id="maksimalno_polaznika" name="maksimalno_polaznika" value="15">
+                        <input type="number" class="form-control" id="maksimalno_polaznika" name="maksimalno_polaznika" value="15" required min="1" oninvalid="this.setCustomValidity('Unesite broj polaznika')" oninput="this.setCustomValidity('')">
                     </div>
                 </div>
                 <div class="mb-3">
@@ -152,7 +152,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-2">
                         <div class="event-time" th:text="${#temporals.format(cas.datum_vreme, 'HH:mm')}">10:00</div>
-                        <div class="event-date" th:text="${#temporals.format(cas.datum_vreme, 'dd.MM.yyyy')}">10.11.2025</div>
+                        <div class="event-date" th:text="${#temporals.format(cas.datum_vreme, 'dd/MM/yyyy')}">14/11/2025</div>
                     </div>
                     <div class="col-md-8">
                         <span th:class="'event-type type-' + ${cas.tip_casa}" th:text="${cas.tip_casa}">balet</span>
@@ -163,8 +163,19 @@
                             <span th:text="'Max: ' + ${cas.maksimalno_polaznika}">Max: 15</span>
                         </p>
                     </div>
-                    <div class="col-md-2 text-end" th:if="${viewModel.instructor}">
-                        <div class="d-flex flex-column gap-2">
+                    <div class="col-md-2 text-end">
+                        <!-- Dugme za učenike - prijava/odjava -->
+                        <div th:if="${viewModel.learner}" class="d-flex flex-column gap-2">
+                            <button type="button" 
+                                    th:id="${'btnPrijava' + cas.id}"
+                                    th:data-raspored-id="${cas.id}"
+                                    class="btn btn-sm btn-attendance">
+                                Učitavanje...
+                            </button>
+                        </div>
+                        
+                        <!-- Dugmad za instruktore - izmena/brisanje -->
+                        <div th:if="${viewModel.instructor}" class="d-flex flex-column gap-2">
                             <button type="button" class="btn btn-sm btn-outline-primary" 
                                     data-bs-toggle="modal" 
                                     th:data-bs-target="${'#editModal' + cas.id}">
@@ -260,5 +271,125 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+<script th:if="${viewModel.learner}">
+    // ========================================================================
+    // JAVASCRIPT ZA PRIJAVU/ODJAVU SA ČASOVA
+    // ========================================================================
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Pronađi sva dugmad za prijavu
+        const buttons = document.querySelectorAll('.btn-attendance');
+        
+        buttons.forEach(button => {
+            const rasporedId = button.getAttribute('data-raspored-id');
+            
+            // Proveri status prijave za svaki čas
+            checkAttendanceStatus(rasporedId, button);
+            
+            // Dodaj event listener za klik
+            button.addEventListener('click', function() {
+                toggleAttendance(rasporedId, button);
+            });
+        });
+    });
+    
+    /**
+     * Proverava da li je učenik prijavljen na čas i ažurira dugme.
+     */
+    function checkAttendanceStatus(rasporedId, button) {
+        fetch(`/raspored/api/${rasporedId}/status`)
+            .then(response => response.json())
+            .then(data => {
+                updateButton(button, data.prijavljen);
+            })
+            .catch(error => {
+                console.error('Greška pri proveri statusa:', error);
+                button.textContent = 'Greška';
+                button.disabled = true;
+            });
+    }
+    
+    /**
+     * Prijavljuje ili odjavljuje učenika sa časa.
+     */
+    function toggleAttendance(rasporedId, button) {
+        const isPrijavljen = button.classList.contains('btn-danger');
+        const endpoint = isPrijavljen ? 'odjavi' : 'prijavi';
+        
+        // Disable dugme tokom zahteva
+        button.disabled = true;
+        button.textContent = 'Učitavanje...';
+        
+        fetch(`/raspored/api/${rasporedId}/${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Ažuriraj dugme
+                updateButton(button, !isPrijavljen);
+                
+                // Prikaži success poruku
+                showMessage(data.message, 'success');
+            } else {
+                // Prikaži error poruku
+                showMessage(data.message, 'danger');
+                button.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Greška:', error);
+            showMessage('Greška pri povezivanju sa serverom.', 'danger');
+            button.disabled = false;
+            updateButton(button, isPrijavljen); // Vrati na prethodno stanje
+        });
+    }
+    
+    /**
+     * Ažurira izgled dugmeta na osnovu statusa prijave.
+     */
+    function updateButton(button, isPrijavljen) {
+        button.disabled = false;
+        
+        if (isPrijavljen) {
+            button.textContent = 'Ne dolazim';
+            button.className = 'btn btn-sm btn-danger btn-attendance';
+        } else {
+            button.textContent = 'Dolazim';
+            button.className = 'btn btn-sm btn-success btn-attendance';
+        }
+    }
+    
+    /**
+     * Prikazuje poruku korisniku.
+     */
+    function showMessage(message, type) {
+        // Pronađi kontejner za poruke
+        const mainContainer = document.querySelector('main.container');
+        
+        // Kreiraj div za poruku
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Dodaj na vrh kontejnera
+        mainContainer.insertBefore(alertDiv, mainContainer.firstChild);
+        
+        // Automatski ukloni posle 5 sekundi
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+</script>
+
 </body>
 </html>

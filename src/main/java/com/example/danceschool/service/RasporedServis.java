@@ -39,6 +39,10 @@ public class RasporedServis {
                              ", Datum: " + r.getDatum_vreme() + ", Instruktor ID: " + r.getInstruktor_id());
         }
         
+        System.out.println("DEBUG: Uloga korisnika = '" + korisnik.getUloga() + "'");
+        System.out.println("DEBUG: je_instruktor() = " + korisnik.je_instruktor());
+        System.out.println("DEBUG: je_ucenik() = " + korisnik.je_ucenik());
+        
         if (korisnik.je_instruktor()) {
             System.out.println("Korisnik JE instruktor, vraćam SVE rasporede: " + svi_rasporedi.size());
             System.out.println("=============================");

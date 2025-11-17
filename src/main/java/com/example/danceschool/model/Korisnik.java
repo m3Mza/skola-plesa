@@ -126,11 +126,11 @@ public class Korisnik {
     
     // Pomoćne metode
     public boolean je_instruktor() {
-        return "instruktor".equals(uloga);
+        return "instruktor".equalsIgnoreCase(uloga);
     }
     
     public boolean je_ucenik() {
-        return "ucenik".equals(uloga);
+        return "ucenik".equalsIgnoreCase(uloga);
     }
     
     public String getPuno_ime() {

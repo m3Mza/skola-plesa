@@ -3,9 +3,11 @@ package com.example.danceschool.controller;
 import com.example.danceschool.model.*;
 import com.example.danceschool.service.RasporedServis;
 import com.example.danceschool.service.KorisnikServis;
+import com.example.danceschool.service.PrijavaServis;
 import com.example.danceschool.viewmodel.RasporedViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -26,6 +28,9 @@ public class RasporedController {
     
     @Autowired
     private KorisnikServis korisnikServis;
+    
+    @Autowired
+    private PrijavaServis prijavaServis;
     
     @Value("${app.naziv:Škola plesa}")
     private String nazivSkole;
@@ -176,5 +181,128 @@ public class RasporedController {
         }
         
         return "redirect:/raspored";
+    }
+    
+    // ========================================================================
+    // REST API ENDPOINTS ZA PRIJAVU/ODJAVU NA ČAS
+    // ========================================================================
+    
+    /**
+     * REST endpoint za prijavu učenika na čas.
+     * Proverava kapacitet i vraća JSON odgovor.
+     */
+    @PostMapping("/api/{id}/prijavi")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> prijaviNaCas(@PathVariable Long id) {
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Map<String, Object> response = new HashMap<>();
+        
+        if (auth == null || !auth.isAuthenticated()) {
+            response.put("success", false);
+            response.put("message", "Niste prijavljeni.");
+            return ResponseEntity.status(401).body(response);
+        }
+        
+        Optional<Korisnik> korisnikOpt = korisnikServis.pronadji_korisnika_po_emailu(auth.getName());
+        if (!korisnikOpt.isPresent()) {
+            response.put("success", false);
+            response.put("message", "Korisnik nije pronađen.");
+            return ResponseEntity.status(404).body(response);
+        }
+        
+        Korisnik korisnik = korisnikOpt.get();
+        
+        try {
+            PrijavaServis.RezultatPrijave rezultat = prijavaServis.prijavi_se(id, korisnik.getId());
+            
+            response.put("success", rezultat.isUspeh());
+            response.put("message", rezultat.getPoruka());
+            
+            return rezultat.isUspeh() 
+                ? ResponseEntity.ok(response) 
+                : ResponseEntity.badRequest().body(response);
+                
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Greška pri prijavi na čas: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    /**
+     * REST endpoint za odjavu učenika sa časa.
+     */
+    @PostMapping("/api/{id}/odjavi")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> odjaviSaCasa(@PathVariable Long id) {
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Map<String, Object> response = new HashMap<>();
+        
+        if (auth == null || !auth.isAuthenticated()) {
+            response.put("success", false);
+            response.put("message", "Niste prijavljeni.");
+            return ResponseEntity.status(401).body(response);
+        }
+        
+        Optional<Korisnik> korisnikOpt = korisnikServis.pronadji_korisnika_po_emailu(auth.getName());
+        if (!korisnikOpt.isPresent()) {
+            response.put("success", false);
+            response.put("message", "Korisnik nije pronađen.");
+            return ResponseEntity.status(404).body(response);
+        }
+        
+        Korisnik korisnik = korisnikOpt.get();
+        
+        try {
+            PrijavaServis.RezultatPrijave rezultat = prijavaServis.odjavi_se(id, korisnik.getId());
+            
+            response.put("success", rezultat.isUspeh());
+            response.put("message", rezultat.getPoruka());
+            
+            return rezultat.isUspeh() 
+                ? ResponseEntity.ok(response) 
+                : ResponseEntity.badRequest().body(response);
+                
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Greška pri odjavi sa časa: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    /**
+     * REST endpoint za proveru da li je učenik prijavljen na čas.
+     */
+    @GetMapping("/api/{id}/status")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> statusPrijave(@PathVariable Long id) {
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Map<String, Object> response = new HashMap<>();
+        
+        if (auth == null || !auth.isAuthenticated()) {
+            response.put("prijavljen", false);
+            return ResponseEntity.ok(response);
+        }
+        
+        Optional<Korisnik> korisnikOpt = korisnikServis.pronadji_korisnika_po_emailu(auth.getName());
+        if (!korisnikOpt.isPresent()) {
+            response.put("prijavljen", false);
+            return ResponseEntity.ok(response);
+        }
+        
+        Korisnik korisnik = korisnikOpt.get();
+        
+        try {
+            boolean prijavljen = prijavaServis.je_prijavljen(id, korisnik.getId());
+            response.put("prijavljen", prijavljen);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("prijavljen", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
     }
 }
